@@ -7,7 +7,7 @@
 
 ##  Installation
 
-hyqt requires Python 3.8 or newer.
+hyqt requires Python 3.10 or newer.
 
 simply run:
 

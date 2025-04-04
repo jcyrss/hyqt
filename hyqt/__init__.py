@@ -1,4 +1,4 @@
-version = '0.0.3'
+version = '0.0.4'
 from PySide6.QtWidgets import *
 from PySide6 import QtCore
 
@@ -657,9 +657,12 @@ class _Container(QFrame):
             else:
                 self.lo.addWidget(child, stretchFactor)
 
-            # 设置子控件的对齐, 注意会阻止子控件的 sizepolicy Expanding，如果不需要不要设置
+            # 设置子控件的对齐, 注意会阻止子控件的 sizepolicy Expanding，如果不需要，不要设置
             # 参考 https://stackoverflow.com/q/25512664/2602410
             if self.alignValue is not None:
+                # 对于分割线，不设置，否则分割线扩展策略不生效，会看不见
+                if isinstance(child, VerticalLine) or isinstance(child, HorizontalLine):
+                    continue
                 self.lo.setAlignment(child, self.alignValue)
             if hasattr(child, '_hy_align'):
                 alignValue =  self.AlignTable.get(child._hy_align)

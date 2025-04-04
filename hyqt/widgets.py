@@ -8,16 +8,16 @@ from .richedit import RichTextBrowser, RichTextEdit
 import re
 
 class VerticalLine(QFrame):
-    def __init__(self, color='#E5E5E5'):
+    def __init__(self, color='#E5E5E5', lineWidth=1):
         super().__init__()
-        self.setFixedWidth(1)
+        self.setFixedWidth(lineWidth)
         self.setStyleSheet(f'background-color:{color}')
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
 
 class HorizontalLine(QFrame):
-    def __init__(self, color='#E5E5E5'):
+    def __init__(self, color='#E5E5E5', lineWidth=1):
         super().__init__()
-        self.setFixedHeight(1)
+        self.setFixedHeight(lineWidth)
         self.setStyleSheet(f'background-color:{color}')
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
