@@ -1,4 +1,5 @@
-version = '0.0.5'
+version = '0.0.6'
+
 from PySide6.QtWidgets import *
 from PySide6 import QtCore
 
@@ -802,10 +803,10 @@ class _Container(QFrame):
 
     def remove(self,  child, deleteAlso=False):
         """
-        delete a child widget or layout
+        去掉内部指定子控件
 
         :param child: 子控件
-        :type child: QWidget or QLayout
+        :param deleteAlso: 是否删除该子控件
         """
         def _deleteStretch(index):
             itemToRemove = self.lo.takeAt(index)
@@ -859,10 +860,18 @@ class _Container(QFrame):
         self.children.remove(child)
 
 
-    def delete(self):
-        self.remove(self, deleteAlso=True)
+    def delete(self, child):
+        """
+        去掉内部指定子控件，并删除该子控件对象
+
+        :param child: 子控件
+        """
+        self.remove(child, deleteAlso=True)
 
     def clear(self):
+        """
+        清空所有内部子控件
+        """
         clearLayout(self.lo, )
         # self.lo.deleteLater()
         
