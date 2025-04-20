@@ -1,4 +1,4 @@
-version = '0.0.6'
+version = '0.0.7'
 
 from PySide6.QtWidgets import *
 from PySide6 import QtCore
@@ -39,7 +39,7 @@ def ss(widget:QWidget,
 
     border:str|None=None,
     padding:str|None=None,  
-    hExpanding=True,       
+    hExpanding=False,       
     vExpanding=False,    
 
     name:str|None=None,    
