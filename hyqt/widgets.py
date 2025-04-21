@@ -7,19 +7,7 @@ from .richedit import RichTextBrowser, RichTextEdit
 
 import re
 
-class VerticalLine(QFrame):
-    def __init__(self, color='#E5E5E5', lineWidth=1):
-        super().__init__()
-        self.setFixedWidth(lineWidth)
-        self.setStyleSheet(f'background-color:{color}')
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
 
-class HorizontalLine(QFrame):
-    def __init__(self, color='#E5E5E5', lineWidth=1):
-        super().__init__()
-        self.setFixedHeight(lineWidth)
-        self.setStyleSheet(f'background-color:{color}')
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
 
 class VaryWidthLineEdit(QLineEdit):
@@ -71,7 +59,7 @@ class EditableButton(QFrame):
         for k,v in attrs.items():
             setattr(self, k, v)
 
-        self.btn  = Button2(text, clickCallBack=lambda:clickCallBack(self))
+        self.btn  = _Button(text, clickCallBack=lambda:clickCallBack(self))
 
         self.edit   = VaryWidthLineEdit(text, clickCallBack=lambda:clickCallBack(self))
         # 参考 https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.FocusPolicy
@@ -174,7 +162,7 @@ class StyledLabel(ClickableLabel):
 
 
 
-class Button2(QPushButton):
+class _Button(QPushButton):
     base_style = '''
 QPushButton {    
     color: SteelBlue;    
@@ -229,19 +217,13 @@ QPushButton:disabled {
         self.style = re.sub(pattern, rf"\1 {color} ;", self.style, count=1)
         self.setStyleSheet(self.style)
 
-class Button_NoBorder(Button2): 
+    
+    
+class Button_NB_SM(_Button): 
 
     _myStyle = {
         'border' : 'none',
         'font-size' : '13px'
-    }
-    
-    
-class Button_NoBorder_Little(Button2): 
-
-    _myStyle = {
-        'border' : 'none',
-        'font-size' : '12.5px'
     }
 
 class ButtonWithValue(QFrame):
@@ -251,7 +233,7 @@ class ButtonWithValue(QFrame):
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0,0,0,0)
 
-        btn = Button_NoBorder_Little(text)
+        btn = Button_NB_SM(text)
 
         self.valueInput = valueInput = QLineEdit()
         valueInput.setFixedSize(70, 24)     
@@ -343,7 +325,7 @@ class Selector(QFrame) :
       
 
         valueItem =  ButtonWithValue(itemText) if self.itemWithValue \
-            else  Button_NoBorder_Little(itemText)  
+            else  Button_NB_SM(itemText)  
         
         valueItem.itemData = itemData
 
@@ -554,98 +536,44 @@ class DotLine(QFrame):
 
 
 
-if __name__ == '__main__':
-    from PySide6.QtWidgets import QApplication
+def createForm( fields:list|dict, okBtnText='确定', 
+               okCallback=None, cancelCallback=None):
+    
+    fieldsFrame = QFrame()
+    fieldsLayout = QVBoxLayout(fieldsFrame)
+    fieldsLayout.setSpacing(0)
 
-    testData = {
-  "ret": 0,
-  "rec": {
-    "id": 4,
-    "creatorname": "车间工1",
-    "title": "2024-11-30 03:00 - 普瑞巴林（Lyrica）提纯 第6期 - 室温稳定观察",
-    "currentstate": "空白/对照样工作已开始",
-    "createdate": "2024-11-30T01:38:28.056Z",
-    "steps": [
-      {
-        "id": 10,
-        "operator_id": 2,
-        "operator__realname": "车间工1",
-        "operator__avatar": "m2",
-        "actiondate": "2024-11-30T01:38:28.056Z",
-        "actionname": "创建送样申请",
-        "nextstate": "送样申请已创建"
-      },
-      {
-        "id": 11,
-        "operator_id": 2,
-        "operator__realname": "车间工1",
-        "operator__avatar": "m2",
-        "actiondate": "2024-11-30T01:43:56.899Z",
-        "actionname": "修改送样时间",
-        "nextstate": "送样申请已创建"
-      },
-      {
-        "id": 12,
-        "operator_id": 3,
-        "operator__realname": "质检工1",
-        "operator__avatar": "f2",
-        "actiondate": "2024-11-30T01:45:00.262Z",
-        "actionname": "开始空白/对照样工作",
-        "nextstate": "空白/对照样工作已开始"
-      },
-      {
-        "id": 13,
-        "operator_id": 2,
-        "operator__realname": "车间工1",
-        "operator__avatar": "m2",
-        "actiondate": "2024-11-30T01:46:17.693Z",
-        "actionname": "修改送样时间",
-        "nextstate": "空白/对照样工作已开始"
-      },
-      {
-        "id": 14,
-        "operator_id": 3,
-        "operator__realname": "质检工1",
-        "operator__avatar": "f2",
-        "actiondate": "2024-11-30T01:50:16.278Z",
-        "actionname": "确知修改送样时间",
-        "nextstate": "空白/对照样工作已开始"
-      }
-    ]
-  },
-  "whaticando": [
-    {
-      "name": "确认收到样品",
-      "submitdata": [
-        {
-          "name": "备注",
-          "type": "PlainTextEdit",
-          "check_string_len": [
-            0,
-            50000
-          ]
-        }
-      ]
-    },
-    {
-      "name": "确知修改送样时间",
-      "submitdata": [
-        {
-          "name": "备注",
-          "type": "PlainTextEdit",
-          "check_string_len": [
-            0,
-            50000
-          ]
-        }
-      ]
-    }
-  ],
-}
+    # （name, widget）   的控件 列表或者字典
+    if isinstance(fields, dict) or isinstance(fields, list):
+        if isinstance(fields, dict):
+            fields = fields.items()
+            
+        for name, widget in fields:        
+            fieldsLayout.addWidget(QLabel(name))
+            fieldsLayout.addWidget(widget)
+            
+            fieldsLayout.addSpacing(20)
+    else:
+        # 单独的一个控件，直接显示
+        fieldsLayout.addWidget(fields)
 
-    rec = testData["rec"]
-    app = QApplication()
-    f = TimeLine(rec['steps'], rec['currentstate'])
-    f.resize(600,500)
-    f.show()
-    app.exec()
+
+    actionLayout = QHBoxLayout()
+    fieldsLayout.addSpacing(8)
+    fieldsLayout.addLayout(actionLayout)
+    
+    btnOk = Button_NB_SM('确定')
+    btnCancel = Button_NB_SM('取消')
+
+    
+    btnOk.clicked.connect(
+        lambda: okCallback(fieldsFrame)
+    )
+    btnCancel.clicked.connect(
+        lambda: cancelCallback(fieldsFrame)
+    )
+            
+    actionLayout.addWidget(btnOk)
+    actionLayout.addWidget(btnCancel)
+
+    return fieldsFrame

@@ -1,11 +1,10 @@
-version = '0.0.7'
+version = '0.0.8'
 
 from PySide6.QtWidgets import *
-from PySide6 import QtCore
+from PySide6 import QtCore, QtGui
 
 import random, string
 from .utils import *
-from .widgets import *
 
 from dataclasses import dataclass
 from collections.abc import Callable
@@ -33,6 +32,9 @@ def ss(widget:QWidget,
     
     color:str|None=None,
     bgColor:str|None=None, 
+    hoverColor:str|None=None,
+    hoverBgColor:str|None=None,
+
     fontSize:int|None=None,
     fontWeight:str|None=None,
     fontFamily:str|None=None,
@@ -77,6 +79,12 @@ def ss(widget:QWidget,
         字体颜色
     bgColor : str | None, optional
         背景颜色
+    
+    hoverColor : str | None, optional
+        鼠标悬浮时的颜色
+    hoverBgColor : str | None, optional
+        鼠标悬浮时的背景颜色
+
     fontSize : int | None, optional
         字体大小 
     fontFamily : str | None, optional
@@ -131,6 +139,7 @@ def ss(widget:QWidget,
         widget._hy_align = align
 
     style = ''
+    hoverStyle = ''
 
     if border is not None:
         style += f'  border: {border};\n'
@@ -140,6 +149,12 @@ def ss(widget:QWidget,
     
     if bgColor is not None:
         style += f'  background-color: {bgColor};\n'
+
+    if hoverColor is not None:
+        hoverStyle += f'  color: {hoverColor};\n'
+    
+    if hoverBgColor is not None:
+        hoverStyle += f'  background-color: {hoverBgColor};\n'
 
     if fontSize is not None:
         style += f'  font-size: {fontSize}px;\n'
@@ -153,14 +168,25 @@ def ss(widget:QWidget,
     if padding is not None:
         style += f'  padding: {padding};\n'
     
-    if name:
-        widget.setObjectName(name)
+    if not name:
+        name = _randomString()   
+    
+    widget.setObjectName(name)
 
-    if style or styleSheet:    
-        if not name:
-            name = _randomString()   
-            widget.setObjectName(name)
-        widget.setStyleSheet(f'#{name} {{\n{style}\n}}\n\n{styleSheet}')        
+    totalStyleSheet = ''
+
+    if style:
+        totalStyleSheet += f'#{name} {{\n{style}\n}}\n\n'
+    
+    if hoverStyle:
+        totalStyleSheet += f'#{name}:hover {{\n{hoverStyle}\n}}\n\n'
+
+    if styleSheet:
+        totalStyleSheet += styleSheet
+
+    # 如果需要设置样式
+    if totalStyleSheet:  
+        widget.setStyleSheet(totalStyleSheet)        
     
     hp = QSizePolicy.Expanding if hExpanding else QSizePolicy.Maximum
     vp = QSizePolicy.Expanding if vExpanding else QSizePolicy.Maximum
@@ -200,6 +226,12 @@ class _WidgetArgs(TypedDict):
         字体颜色
     bgColor : str | None, optional
         背景颜色
+
+    hoverColor : str | None, optional
+        鼠标悬浮时的颜色
+    hoverBgColor : str | None, optional 
+        鼠标悬浮时的背景颜色
+
     fontSize : int | None, optional
         字体大小 
     fontFamily : str | None, optional
@@ -240,6 +272,9 @@ class _WidgetArgs(TypedDict):
 
     color        :NotRequired[str]
     bgColor      :NotRequired[str]
+    hoverColor   :NotRequired[str]
+    hoverBgColor :NotRequired[str]
+
     fontSize     :NotRequired[int]
     fontWeight   :NotRequired[str]
     fontFamily   :NotRequired[str]
@@ -285,13 +320,40 @@ class Label(QLabel):
 
 
 class Button(QPushButton):
+    """
+    按钮
+    """
     def __init__(self, *args, 
-        onClick:Callable|None=None,     
+        onClick:Callable|None=None, 
+        iconImg:str|None=None, 
         **kwargs: Unpack[_WidgetArgs]):
         
         _custom_widget_init(self, QPushButton, args, kwargs)
 
         self.clicked.connect(onClick)
+        
+        if iconImg:
+            self.setIcon(QtGui.QIcon(iconImg))
+
+class ButtonNB(Button):
+    """
+    无边框按钮
+    """
+    def __init__(self, *args, 
+        onClick:Callable|None=None, 
+        iconImg:str|None=None, 
+        **kwargs: Unpack[_WidgetArgs]):
+        
+        kwargs['border'] = 'none'
+        kwargs['padding'] = '2px 5px'
+
+        if 'hoverColor' not in kwargs:
+            kwargs['hoverColor'] = 'white'
+        if 'hoverBgColor' not in kwargs:
+            kwargs['hoverBgColor'] = 'LightSeaGreen'
+
+        super().__init__(*args, onClick=onClick, iconImg=iconImg, **kwargs)
+        
 
 
 class Input(QLineEdit):
@@ -402,6 +464,19 @@ class TextBrowser(QTextBrowser):
         _custom_widget_init(self, QTextBrowser, args, kwargs)
 
 
+class VerticalLine(QFrame):
+    def __init__(self, color='#E5E5E5', lineWidth=1):
+        super().__init__()
+        self.setFixedWidth(lineWidth)
+        self.setStyleSheet(f'background-color:{color}')
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
+
+class HorizontalLine(QFrame):
+    def __init__(self, color='#E5E5E5', lineWidth=1):
+        super().__init__()
+        self.setFixedHeight(lineWidth)
+        self.setStyleSheet(f'background-color:{color}')
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
 @dataclass
 class s__:    
@@ -510,7 +585,7 @@ class s__:
     fontSize:int|None=None
     fontFamily:str|None=None
     border:str|None=None
-    paddings:int|list=0  
+    paddings:int|list=10  
     hExpanding:bool=True   
     vExpanding:bool=True
     name:str|None=None
@@ -982,49 +1057,6 @@ class Column(_Container):
 
 
 
-def createForm( fields:list|dict, okBtnText='确定', 
-               okCallback=None, cancelCallback=None):
-    
-    fieldsFrame = QFrame()
-    fieldsLayout = QVBoxLayout(fieldsFrame)
-    fieldsLayout.setSpacing(0)
-
-    # （name, widget）   的控件 列表或者字典
-    if isinstance(fields, dict) or isinstance(fields, list):
-        if isinstance(fields, dict):
-            fields = fields.items()
-            
-        for name, widget in fields:        
-            fieldsLayout.addWidget(QLabel(name))
-            fieldsLayout.addWidget(widget)
-            
-            fieldsLayout.addSpacing(20)
-    else:
-        # 单独的一个控件，直接显示
-        fieldsLayout.addWidget(fields)
-
-
-    actionLayout = QHBoxLayout()
-    fieldsLayout.addSpacing(8)
-    fieldsLayout.addLayout(actionLayout)
-    
-    btnOk = Button_NoBorder_Little('确定')
-    btnCancel = Button_NoBorder_Little('取消')
-
-    
-    btnOk.clicked.connect(
-        lambda: okCallback(fieldsFrame)
-    )
-    btnCancel.clicked.connect(
-        lambda: cancelCallback(fieldsFrame)
-    )
-            
-    actionLayout.addWidget(btnOk)
-    actionLayout.addWidget(btnCancel)
-
-    return fieldsFrame
-
-
 # 达到类似HTML中 flexbox 的效果
 class FlowLayout(QLayout):
     def __init__(self, parent=None, margin=-1, hspacing=-1, vspacing=-1):
@@ -1130,7 +1162,4 @@ class FlowLayout(QLayout):
             return parent.spacing()
 
 
-
-
-# testing code below
 
