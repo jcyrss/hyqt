@@ -1,4 +1,4 @@
-version = '0.0.8'
+version = '0.0.9'
 
 from PySide6.QtWidgets import *
 from PySide6 import QtCore, QtGui
@@ -327,15 +327,40 @@ class Button(QPushButton):
         onClick:Callable|None=None, 
         iconImg:str|None=None, 
         **kwargs: Unpack[_WidgetArgs]):
-        
+
         _custom_widget_init(self, QPushButton, args, kwargs)
 
+        self.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.PointingHandCursor))
         self.clicked.connect(onClick)
-        
+                
         if iconImg:
             self.setIcon(QtGui.QIcon(iconImg))
 
-class ButtonNB(Button):
+
+
+class ButtonF(Button):
+    """
+    扁平风格按钮
+    """
+    def __init__(self, *args, 
+        onClick:Callable|None=None, 
+        iconImg:str|None=None, 
+        **kwargs: Unpack[_WidgetArgs]):
+        
+        if 'border' not in kwargs:
+            kwargs['border'] = '1px solid DimGray'
+        if 'padding' not in kwargs:
+            kwargs['padding'] = '1px 10px'
+
+        # if 'hoverColor' not in kwargs:
+        #     kwargs['hoverColor'] = 'white'
+        if 'hoverBgColor' not in kwargs:
+            kwargs['hoverBgColor'] = 'Azure'
+
+        super().__init__(*args, onClick=onClick, iconImg=iconImg, **kwargs)
+
+
+class ButtonNB(ButtonF):
     """
     无边框按钮
     """
@@ -344,13 +369,19 @@ class ButtonNB(Button):
         iconImg:str|None=None, 
         **kwargs: Unpack[_WidgetArgs]):
         
-        kwargs['border'] = 'none'
-        kwargs['padding'] = '2px 5px'
+        if 'border' not in kwargs:
+            kwargs['border'] = 'none'
+
+        # if 'hoverColor' not in kwargs:
+        #     kwargs['hoverColor'] = 'white'
+        # if 'hoverBgColor' not in kwargs:
+        #     kwargs['hoverBgColor'] = 'SteelBlue'
 
         if 'hoverColor' not in kwargs:
-            kwargs['hoverColor'] = 'white'
+            kwargs['hoverColor'] = 'teal'
         if 'hoverBgColor' not in kwargs:
-            kwargs['hoverBgColor'] = 'LightSeaGreen'
+            kwargs['hoverBgColor'] = 'none'
+        
 
         super().__init__(*args, onClick=onClick, iconImg=iconImg, **kwargs)
         
