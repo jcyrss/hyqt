@@ -1,4 +1,4 @@
-version = '0.0.9'
+version = '0.0.10'
 
 from PySide6.QtWidgets import *
 from PySide6 import QtCore, QtGui
@@ -331,7 +331,9 @@ class Button(QPushButton):
         _custom_widget_init(self, QPushButton, args, kwargs)
 
         self.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.PointingHandCursor))
-        self.clicked.connect(onClick)
+
+        if onClick:
+            self.clicked.connect(onClick)
                 
         if iconImg:
             self.setIcon(QtGui.QIcon(iconImg))
@@ -422,7 +424,7 @@ class Input(QLineEdit):
         placeholder : str | None, optional
             输入提示占位符
         textAlign : str | None, optional
-            内部文本的对齐方式，取值为 center, left, right
+            文本的对齐方式，取值为 center, left, right
         echoMode : str | None, optional
             文字回显模式，取值为 normal, no-echo, password， password-echo-on-edit
         leadingActionIcon : str | None, optional
@@ -432,7 +434,7 @@ class Input(QLineEdit):
         intOnly : bool | None, optional
             只允许输入整数
         onChange : Callable | None, optional
-            内部文本改变时的回调函数
+            文本改变时的回调函数
         """
         
         _custom_widget_init(self, QLineEdit, args, kwargs)
@@ -476,7 +478,7 @@ class TextArea(QTextEdit):
         placeholder : str | None, optional
             输入提示占位符
         onChange : Callable | None, optional
-            内部文本改变时的回调函数
+            文本改变时的回调函数
         """
         
         _custom_widget_init(self, QTextEdit, args, kwargs)
