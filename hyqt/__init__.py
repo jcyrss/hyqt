@@ -624,7 +624,9 @@ class s__:
     name:str|None=None
     styleSheet:str=''
 
-    
+# use could use both Style and s__ to set style for container widgets, like Row, Column
+Style = s__
+
 def spacing(value:int):
     return  f'spacing:{value}'  # ['spacing', value] 
 
