@@ -1,5 +1,3 @@
-version = '0.0.10'
-
 from PySide6.QtWidgets import *
 from PySide6 import QtCore, QtGui
 
@@ -460,7 +458,7 @@ class Input(QLineEdit):
         if trailingActionIcon is not None:
             self.addAction(QtGui.QIcon(trailingActionIcon), QLineEdit.TrailingPosition)
 
-        if intOnly is not None:
+        if intOnly:
             self.setValidator(QtGui.QIntValidator())
 
         if onChange is not None:
@@ -648,17 +646,17 @@ class _Container(QFrame):
         if len(children)==1 and isinstance(children[0], list):
             children = children[0]
             
-        self.itemsJustify = s.itemsJustify
+        self.itemsJustify = 'even' if s.spacing < 0 else s.itemsJustify
         self._hy_stretchFactor = s.stretchFactor
         
         if s.align is not None:
             self._hy_align = s.align
         
-        if s.itemsJustify not in ['start', 'center', 'end', 'even', None]:
+        if self.itemsJustify not in ['start', 'center', 'end', 'even', None]:
             raise ValueError("justify must be 'start', 'center', 'end', 'even', None")
 
 
-        if s.itemsJustify and 'stretch' in children:
+        if self.itemsJustify and 'stretch' in children:
             raise ValueError('stretch as child must with justify set as None')
         
         if s.itemsAlign is not None:
@@ -702,10 +700,7 @@ class _Container(QFrame):
             self.lo.setContentsMargins(*s.paddings)
 
 
-        if s.spacing < 0 :
-            s.spacing = 0
-            
-        self.lo.setSpacing(s.spacing)    
+        self.lo.setSpacing(0 if s.spacing < 0 else s.spacing)    
 
 
 
@@ -748,7 +743,7 @@ class _Container(QFrame):
 
         lastIdx = len(children) - 1    
 
-        if s.itemsJustify in ['end','center']:
+        if self.itemsJustify in ['end','center']:
             self.lo.addStretch()
         
         for idx, child in enumerate(children):
@@ -790,7 +785,7 @@ class _Container(QFrame):
             if self.itemsJustify == 'even' and idx != lastIdx:
                 self.lo.addStretch()
 
-        if s.itemsJustify in ['start','center']:
+        if self.itemsJustify in ['start','center']:
             self.lo.addStretch()
 
 
@@ -798,22 +793,50 @@ class _Container(QFrame):
     def append(self, child, *args, **kwargs):
         
         def _add(child):  
-            if isinstance(child, QLayout, *args, **kwargs):
-                self.lo.addLayout(child, *args, **kwargs)
+            if isinstance(child, QLayout):
+                if args or kwargs:
+                    self.lo.addLayout(child, *args, **kwargs)
+                else:
+                    self.lo.addLayout(child, getattr(child, '_hy_stretchFactor', 0))
             else:
-                self.lo.addWidget(child, *args, **kwargs)
+                if args or kwargs:
+                    self.lo.addWidget(child, *args, **kwargs)
+                else:
+                    self.lo.addWidget(child, getattr(child, '_hy_stretchFactor', 0))
 
             if self.alignValue is not None:
-                self.lo.setAlignment(child, self.alignValue)
+                # 对于分割线，不设置，否则分割线扩展策略不生效，会看不见
+                if not isinstance(child, VerticalLine) and not isinstance(child, HorizontalLine):
+                    self.lo.setAlignment(child, self.alignValue)
+
+            if hasattr(child, '_hy_align'):
+                alignValue =  self.AlignTable.get(child._hy_align)
+                if alignValue is None:
+                    raise ValueError(f'align `{child._hy_align}` not in {self.AlignTable.keys()}')
+                self.lo.setAlignment(child, alignValue)
 
         def _insert(child, index):  
             if isinstance(child, QLayout):
-                self.lo.insertLayout(index, child, *args, **kwargs)
+                if args or kwargs:
+                    self.lo.insertLayout(index, child, *args, **kwargs)
+                else:
+                    self.lo.insertLayout(index, child, getattr(child, '_hy_stretchFactor', 0))
             else:
-                self.lo.insertWidget(index, child, *args, **kwargs)
+                if args or kwargs:
+                    self.lo.insertWidget(index, child, *args, **kwargs)
+                else:
+                    self.lo.insertWidget(index, child, getattr(child, '_hy_stretchFactor', 0))
 
             if self.alignValue is not None:
-                self.lo.setAlignment(child, self.alignValue)
+                # 对于分割线，不设置，否则分割线扩展策略不生效，会看不见
+                if not isinstance(child, VerticalLine) and not isinstance(child, HorizontalLine):
+                    self.lo.setAlignment(child, self.alignValue)
+
+            if hasattr(child, '_hy_align'):
+                alignValue =  self.AlignTable.get(child._hy_align)
+                if alignValue is None:
+                    raise ValueError(f'align `{child._hy_align}` not in {self.AlignTable.keys()}')
+                self.lo.setAlignment(child, alignValue)
 
             
         # 类似 css flex justify space-between 的效果
@@ -864,12 +887,26 @@ class _Container(QFrame):
 
         def _insert(child, index):  
             if isinstance(child, QLayout):
-                self.lo.insertLayout(index, child, *args, **kwargs)
+                if args or kwargs:
+                    self.lo.insertLayout(index, child, *args, **kwargs)
+                else:
+                    self.lo.insertLayout(index, child, getattr(child, '_hy_stretchFactor', 0))
             else:
-                self.lo.insertWidget(index, child, *args, **kwargs)
+                if args or kwargs:
+                    self.lo.insertWidget(index, child, *args, **kwargs)
+                else:
+                    self.lo.insertWidget(index, child, getattr(child, '_hy_stretchFactor', 0))
 
             if self.alignValue is not None:
-                self.lo.setAlignment(child, self.alignValue)
+                # 对于分割线，不设置，否则分割线扩展策略不生效，会看不见
+                if not isinstance(child, VerticalLine) and not isinstance(child, HorizontalLine):
+                    self.lo.setAlignment(child, self.alignValue)
+
+            if hasattr(child, '_hy_align'):
+                alignValue =  self.AlignTable.get(child._hy_align)
+                if alignValue is None:
+                    raise ValueError(f'align `{child._hy_align}` not in {self.AlignTable.keys()}')
+                self.lo.setAlignment(child, alignValue)
 
         # index 为 负数/最后一个/超过范围   都视为添加在最后， 走 append 方法
         if index < 0 or index >= len(self.children):
@@ -888,7 +925,6 @@ class _Container(QFrame):
             if index == 0:
                 _insert(child, 0) 
                 self.lo.insertStretch(1)
-                return    
 
             # ** 插入位置不是第一个， 也不是最后一个（因为最后一个走 append 方法）
             #   ele   ↔   ele
@@ -1002,6 +1038,7 @@ class _Container(QFrame):
 
         if self.itemsJustify == 'center':
             #    ↔    ↔
+            self.lo.addStretch()
             self.lo.addStretch()
 
 
@@ -1195,6 +1232,3 @@ class FlowLayout(QLayout):
             return parent.style().pixelMetric(pm, None, parent)
         else:
             return parent.spacing()
-
-
-

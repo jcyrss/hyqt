@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hyqt"
+dynamic = ["version"]
+description = "A helper library for python Qt"
+readme = { file = "README.md", content-type = "text/markdown" }
+requires-python = ">=3.11"
+license = "Apache-2.0"
+license-files = ["LICENSE.txt"]
+authors = [
+    { name = "baiyueheiyu 白月黑羽", email = "jcyrss@gmail.com" },
+]
+keywords = ["hyqt"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: User Interfaces",
+]
+dependencies = [
+    "pyside6",
+]
+
+[project.urls]
+Homepage = "https://github.com/jcyrss/hyqt"
+Download = "https://pypi.python.org/pypi/hyqt"
+
+[tool.setuptools.dynamic]
+version = { attr = "hyqt.meta.version" }
+
+[tool.setuptools.packages.find]
+include = ["hyqt", "hyqt.*"]
